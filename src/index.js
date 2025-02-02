@@ -1,8 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-
-function App() {
-  return <h1>Hello! Welcome to Healthcare Chatbot.</h1>;
-}
+import "./index.css";
+import App from "./App";
 
 ReactDOM.render(<App />, document.getElementById("root"));
