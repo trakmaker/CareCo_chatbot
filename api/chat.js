@@ -5,6 +5,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
+  // Load API key from environment variables
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     console.error("❌ OpenAI API Key is missing.");
@@ -17,15 +18,11 @@ export default async function handler(req, res) {
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
-        { role: "system", content: "You are a healthcare assistant providing detailed responses." },
+        { role: "system", content: "You are a healthcare chatbot providing detailed answers." },
         { role: "user", content: req.body.message }
       ],
       max_tokens: 150,
     });
-
-    if (!response.choices || response.choices.length === 0) {
-      throw new Error("No response from OpenAI.");
-    }
 
     res.status(200).json({ reply: response.choices[0].message.content });
   } catch (error) {
