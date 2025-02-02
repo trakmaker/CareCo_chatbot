@@ -4,7 +4,7 @@ import "./Chatbot.css";
 
 export default function HealthcareChatbot() {
   const [messages, setMessages] = useState([
-    { sender: "bot", text: "👋 Hi there! How can I assist you with your healthcare needs today?" },
+    { sender: "bot", text: "👋 Hi there! How can I assist with your healthcare needs today?" },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,10 +25,15 @@ export default function HealthcareChatbot() {
       });
 
       const data = await response.json();
-      setMessages((prev) => [...prev, { sender: "bot", text: data.reply || "I don't have an answer for that." }]);
+
+      if (data.reply) {
+        setMessages((prev) => [...prev, { sender: "bot", text: data.reply }]);
+      } else {
+        setMessages((prev) => [...prev, { sender: "bot", text: "I couldn't find an answer to that." }]);
+      }
     } catch (error) {
       console.error("Error fetching AI response:", error);
-      setMessages((prev) => [...prev, { sender: "bot", text: "Error: Unable to get response." }]);
+      setMessages((prev) => [...prev, { sender: "bot", text: "Error: Unable to get response. Please try again later." }]);
     }
 
     setLoading(false);
@@ -42,7 +47,7 @@ export default function HealthcareChatbot() {
             {msg.text}
           </div>
         ))}
-        {loading && <div className="chat-bubble bot">Thinking...</div>}
+        {loading && <div className="chat-bubble bot">🤖 Typing...</div>}
       </div>
       <div className="chat-input-container">
         <input
