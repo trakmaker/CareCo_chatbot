@@ -1,35 +1,45 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
+import OpenAI from "openai";
+import "./Chatbot.css";
 
-
-import "./Chatbot.css";  // Add a CSS file for styling
+// Initialize OpenAI API
+const openai = new OpenAI({
+  apiKey: process.env.REACT_APP_OPENAI_API_KEY, // Store this in .env file
+  dangerouslyAllowBrowser: true, // Required for browser-based requests
+});
 
 export default function HealthcareChatbot() {
   const [messages, setMessages] = useState([
     { sender: "bot", text: "Welcome! How can I assist with your healthcare needs today?" },
   ]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage = { sender: "user", text: input };
     setMessages([...messages, userMessage]);
     setInput("");
+    setLoading(true);
 
-    setTimeout(() => {
-      let botResponse = "I'm sorry, I don't have that information.";
-      if (input.toLowerCase().includes("deductible")) {
-        botResponse = "Your current deductible balance is $500.";
-      } else if (input.toLowerCase().includes("claim")) {
-        botResponse = "Your last claim for a physical exam was approved on Jan 15, 2024.";
-      } else if (input.toLowerCase().includes("doctor")) {
-        botResponse = "Dr. Smith (Cardiologist) in Houston is in-network for your plan.";
-      } else if (input.toLowerCase().includes("schedule appointment")) {
-        botResponse = "I can schedule an appointment for you. What date and time do you prefer?";
-      }
+    try {
+      // Call OpenAI API
+      const response = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [{ role: "system", content: "You are a healthcare assistant chatbot." }, { role: "user", content: input }],
+        max_tokens: 100,
+      });
+
+      const botResponse = response.choices[0].message.content || "I'm sorry, I don't have that information.";
       setMessages((prev) => [...prev, { sender: "bot", text: botResponse }]);
-    }, 1500);
+    } catch (error) {
+      console.error("Error fetching AI response:", error);
+      setMessages((prev) => [...prev, { sender: "bot", text: "Error: Unable to get response. Please try again later." }]);
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -40,6 +50,7 @@ export default function HealthcareChatbot() {
             {msg.text}
           </div>
         ))}
+        {loading && <div className="chat-bubble bot">Thinking...</div>}
       </div>
       <div className="chat-input-container">
         <input
@@ -49,7 +60,7 @@ export default function HealthcareChatbot() {
           placeholder="Ask about claims, providers, etc..."
           className="chat-input"
         />
-        <button onClick={handleSend} className="send-button">
+        <button onClick={handleSend} className="send-button" disabled={loading}>
           <Send size={18} />
         </button>
       </div>
